@@ -1,18 +1,19 @@
-# Step 1: Build stage
-FROM maven:3.9-eclipse-temurin-17 AS build
+# Step 1: Build stage (Using Java 21)
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy the entire project folder
-COPY . .
+# Copy configuration and map the source code correctly
+COPY pom.xml .
+COPY api/src ./src
 
-# Move into the directory if needed or build directly
+# Execute the Maven package step
 RUN mvn clean package -DskipTests
 
-# Step 2: Runtime stage
-FROM eclipse-temurin:17-jre
+# Step 2: Runtime stage (Using Java 21)
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Copy the compiled jar from target
+# Copy the compiled jar
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
