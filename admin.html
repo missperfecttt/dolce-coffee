@@ -181,7 +181,12 @@
                 })
                 .catch(err => {
                     console.error("Fetch Error:", err);
-                    document.getElementById("active-orders-list").innerHTML = "<p style='color:red;'>Error connecting to backend API. Ensure Spring Boot backend is running.</p>";
+                    document.getElementById("active-orders-list").innerHTML = 
+                        `<div style="padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; color: #991b1b;">
+                            <strong>Backend Connection Pending:</strong><br>
+                            Could not connect to <code>${API_BASE_URL}</code>.<br>
+                            If your Render Web Service URL is different, update <code>API_BASE_URL</code> in <code>script.js</code> and <code>admin.html</code>.
+                        </div>`;
                     document.getElementById("completed-orders-list").innerHTML = "";
                 });
         }
