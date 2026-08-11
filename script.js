@@ -207,14 +207,25 @@ function previewScreenshot(event) {
     }
 }
 
-function submitOrder() {
-    if (selectedOrderType === "Takeaway") {
-        const screenshotInput = document.getElementById("payment-screenshot");
-        if (!screenshotInput.files || screenshotInput.files.length === 0) {
-            alert("Please upload a payment screenshot/receipt for takeaway advance payment.");
-            return;
-        }
+function selectPaymentMethod(method, accountNumber) {
+    document.querySelectorAll('.payment-card').forEach(c => c.style.borderColor = 'var(--border-soft)');
+    const selectedCard = document.getElementById(method === 'Telebirr' ? 'pay-card-telebirr' : 'pay-card-cbe');
+    if (selectedCard) selectedCard.style.borderColor = 'var(--primary-lime)';
+}
 
+function copyAccount(number, btn) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(number).then(() => {
+            const orig = btn.innerText;
+            btn.innerText = "Copied!";
+            setTimeout(() => btn.innerText = orig, 2000);
+        }).catch(() => {});
+    }
+}
+
+function submitOrder() {
+    const screenshotInput = document.getElementById("payment-screenshot");
+    if (screenshotInput && screenshotInput.files && screenshotInput.files.length > 0) {
         const file = screenshotInput.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
