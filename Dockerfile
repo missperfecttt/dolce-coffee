@@ -6,6 +6,9 @@ WORKDIR /app
 COPY pom.xml .
 COPY api/src ./src
 
+# Execute the Maven package step AND repackage into an executable JAR
+RUN mvn clean package spring-boot:repackage -DskipTests
+
 # Execute the Maven package step
 RUN mvn clean package -DskipTests
 
