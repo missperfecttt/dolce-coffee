@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolce Coffee</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .payment-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 15px;
+            margin: 12px 0;
+        }
+
+        .payment-card {
+            flex: 1;
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            padding: 10px;
+            background: #fff;
+            text-align: center;
+        }
+
+        .payment-img {
+            height: 35px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+
+        .upload-box {
+            margin-top: 12px;
+            border: 2px dashed var(--border-soft);
+            padding: 12px;
+            border-radius: 8px;
+            background: #fff;
+            text-align: center;
+        }
+
+        .upload-box input {
+            display: none;
+        }
+
+        .upload-label {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary-lime-dark);
+            font-size: 0.85rem;
+        }
+
+        .preview-img {
+            max-height: 100px;
+            margin-top: 8px;
+            display: none;
+            border-radius: 6px;
+        }
+
+        .add-more-hint {
+            font-size: 0.85rem;
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                <line x1="6" y1="1" x2="6" y2="4"></line>
+                <line x1="10" y1="1" x2="10" y2="4"></line>
+                <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+            Dolce <span class="highlight">Coffee</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#hero" class="active">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#menu">Menu</a></li>
+            <li><a href="#location">Location</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <button class="cart-trigger-btn" onclick="toggleCart()">
+            Cart <span class="cart-badge" id="cart-count">0</span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <span class="hero-badge">Welcome to Dolce Coffee</span>
+            <h1>Freshly Brewed Excellence</h1>
+            <p class="hero-subtitle">Handcrafted beverages and fresh pastries made daily with organic, locally sourced beans.</p>
+            <a href="#menu" class="btn btn-primary">View Menu</a>
+        </div>
+        <div class="hero-graphic">
+            <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80" alt="Dolce Coffee Ambiance">
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section class="menu-section" id="menu">
+        <div class="section-header">
+            <span class="section-tag">Our Selection</span>
+            <h2>Explore the Menu</h2>
+        </div>
+
+        <div class="category-tabs">
+            <button class="tab-btn active" data-category="ALL">All</button>
+            <button class="tab-btn" data-category="Hot">Hot Drinks</button>
+            <button class="tab-btn" data-category="Cold">Cold Drinks</button>
+            <button class="tab-btn" data-category="Pastry">Pastries</button>
+        </div>
+
+        <div class="menu-grid" id="menu-container"></div>
+    </section>
+
+    <!-- Slide-out Cart Sidebar -->
+    <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button class="close-btn" onclick="toggleCart()">&times;</button>
+        </div>
+
+        <div class="dining-option-wrapper">
+            <span class="dining-label">Order Type: <strong id="selected-dining-type">Dine In</strong></span>
+            <div class="dining-toggle">
+                <button class="dining-btn active" id="btn-dine-in" onclick="setOrderType('Dine In')">Dine In</button>
+                <button class="dining-btn" id="btn-takeaway" onclick="setOrderType('Takeaway')">Takeaway</button>
+            </div>
+        </div>
+
+        <div class="cart-items" id="cart-items-container"></div>
+
+        <div class="cart-footer">
+            <div class="summary-line total-line">
+                <span>Total:</span>
+                <span id="cart-total">0.00 ETB</span>
+            </div>
+            <button class="btn btn-primary btn-checkout" onclick="openConfirmationModal()">Review & Place Order</button>
+        </div>
+    </div>
+
+<!-- Review & Payment Modal -->
+    <div class="modal-overlay" id="order-modal">
+        <div class="modal-card" style="max-width: 650px; width: 90%;">
+            
+            <!-- Step 1: Confirmation Request -->
+            <div id="modal-step-confirm">
+                <h2>Confirm Your Order</h2>
+                <p class="modal-subtitle">Please review your items before submitting.</p>
+                
+                <div class="modal-details" style="text-align: left; max-height: 160px; overflow-y: auto; margin-bottom: 15px;">
+                    <p style="margin-bottom: 8px;"><strong>Order Type:</strong> <span id="confirm-order-type">Dine In</span></p>
+                    <ul id="confirm-item-list" style="margin-left: 20px; font-size: 0.9rem; color: var(--text-muted);"></ul>
+                    <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border-soft);">
+                    <p><strong>Total Amount:</strong> <span id="confirm-total-amount" style="color: var(--primary-lime-dark); font-weight: bold;">0.00 ETB</span></p>
+                </div>
+
+                <!-- Advance Payment Container (Takeaway Only) - Wider Horizontal Grid -->
+                <div id="takeaway-payment-container" class="payment-section" style="display: none; padding: 15px; background: #f8fafc; border: 1px solid var(--border-soft); border-radius: 12px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; color: #dc2626; font-size: 0.95rem;">Takeaway Advance Payment (50%)</h4>
+                        <span style="font-size: 0.85rem;">Due Now: <strong id="deposit-amount" style="color: #dc2626;">0.00 ETB</strong></span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: start;">
+                        <!-- Payment Options Column -->
+                        <div class="payment-methods" style="display: flex; flex-direction: column; gap: 8px; margin: 0;">
+                            <div class="payment-card" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: #fff;">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Telebirr_logo.png/320px-Telebirr_logo.png" alt="Telebirr" style="height: 24px; object-fit: contain;" onerror="this.src='https://placehold.co/80x24?text=Telebirr'">
+                                <div style="text-align: left; font-size: 0.75rem;">
+                                    <strong>Telebirr</strong><br>1000 1234 567
+                                </div>
+                            </div>
+                            <div class="payment-card" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: #fff;">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/CBE_Logo.png" alt="CBE" style="height: 24px; object-fit: contain;" onerror="this.src='https://placehold.co/80x24?text=CBE'">
+                                <div style="text-align: left; font-size: 0.75rem;">
+                                    <strong>CBE</strong><br>1000 9876 5432
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Receipt Column -->
+                        <div class="upload-box" style="border: 2px dashed var(--border-soft); padding: 10px; border-radius: 8px; background: #fff; text-align: center;">
+                            <label for="payment-screenshot" style="cursor: pointer; font-weight: 600; color: var(--primary-lime-dark); font-size: 0.8rem; display: block;">
+                                📁 Upload Receipt / Screenshot
+                            </label>
+                            <input type="file" id="payment-screenshot" accept="image/*" onchange="previewScreenshot(event)" style="display: none;">
+                            <img id="screenshot-preview" style="max-height: 60px; margin-top: 5px; display: none; border-radius: 4px; margin-left: auto; margin-right: auto;" alt="Receipt Preview">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="add-more-hint" style="font-size: 0.8rem; color: #2563eb; background: #eff6ff; padding: 6px 10px; border-radius: 6px; margin-bottom: 12px; text-align: center;">
+                    Need something else? Click "+ Add More Items" to continue browsing our menu!
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" style="background: var(--border-soft); color: var(--text-main); flex: 1;" onclick="closeOrderModal()">+ Add More Items</button>
+                    <button class="btn btn-primary" style="flex: 1;" onclick="submitOrder()">Confirm & Place Order</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Order Placed Success -->
+            <div id="modal-step-success" style="display: none;">
+                <h2>Order Confirmed!</h2>
+                <p class="modal-subtitle">Thank you for ordering at Dolce Coffee.</p>
+                
+                <div class="modal-details">
+                    <div class="detail-row">
+                        <span>Order ID:</span>
+                        <strong id="modal-order-id" style="font-size: 1.1rem; color: var(--primary-lime-dark);">DLC-XXXXX</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Type:</span>
+                        <strong id="modal-order-type">Dine In</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Estimated Time:</span>
+                        <strong id="modal-order-time">10-15 mins</strong>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.85rem; color: #dc2626; background: #fef2f2; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: 600;">
+                    Please save or take a screenshot of your Order ID to present at the counter!
+                </p>
+
+                <button class="btn btn-primary" onclick="closeOrderModal()" style="width: 100%;">Done</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
