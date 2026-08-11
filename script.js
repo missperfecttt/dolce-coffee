@@ -2,7 +2,7 @@ let allMenuItems = [];
 let cart = [];
 let selectedOrderType = "Dine In";
 
-const API_BASE_URL = "https://dolce-coffee-backend.onrender.com";
+const API_BASE_URL = "https://dolce-coffee-backend.onrender.com/api/v1";
 
 const itemImages = {
     "1": "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=500&q=80",

@@ -1,6 +1,12 @@
 package com.dolcecoffee.api.controller;
 
+import com.dolcecoffee.api.model.OrderEntity;
+import com.dolcecoffee.api.repository.OrderRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.*;
 
 @RestController
@@ -8,7 +14,11 @@ import java.util.*;
 @CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class OrderController {
 
-    private final List<Map<String, Object>> orderList = new ArrayList<>();
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public static class CartItemRequest {
         private String id;
@@ -50,17 +60,25 @@ public class OrderController {
         String orderId = "DLC-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
         String orderType = orderRequest.getOrderType() != null ? orderRequest.getOrderType() : "Dine In";
 
-        Map<String, Object> newOrder = new HashMap<>();
-        newOrder.put("orderId", orderId);
-        newOrder.put("orderType", orderType);
-        newOrder.put("totalAmount", orderRequest.getTotalAmount());
-        newOrder.put("advanceAmount", orderRequest.getAdvanceAmount());
-        newOrder.put("paymentReceipt", orderRequest.getPaymentReceipt());
-        newOrder.put("items", orderRequest.getItems());
-        newOrder.put("status", "RECEIVED");
-        newOrder.put("timestamp", new Date().toString());
+        String itemsJson = "[]";
+        try {
+            itemsJson = objectMapper.writeValueAsString(orderRequest.getItems());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
-        orderList.add(0, newOrder);
+        OrderEntity entity = new OrderEntity(
+            orderId,
+            orderType,
+            orderRequest.getTotalAmount(),
+            orderRequest.getAdvanceAmount(),
+            orderRequest.getPaymentReceipt(),
+            "RECEIVED",
+            new Date().toString(),
+            itemsJson
+        );
+
+        orderRepository.save(entity);
 
         Map<String, Object> response = new HashMap<>();
         response.put("orderId", orderId);
@@ -72,25 +90,53 @@ public class OrderController {
 
     @GetMapping
     public List<Map<String, Object>> getAllOrders() {
-        return orderList;
+        List<OrderEntity> entities = orderRepository.findAllByOrderByTimestampDesc();
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (OrderEntity entity : entities) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("orderId", entity.getOrderId());
+            map.put("orderType", entity.getOrderType());
+            map.put("totalAmount", entity.getTotalAmount());
+            map.put("advanceAmount", entity.getAdvanceAmount());
+            map.put("paymentReceipt", entity.getPaymentReceipt());
+            map.put("status", entity.getStatus());
+            map.put("timestamp", entity.getTimestamp());
+
+            try {
+                List<?> items = objectMapper.readValue(entity.getItemsJson(), List.class);
+                map.put("items", items);
+            } catch (Exception e) {
+                map.put("items", Collections.emptyList());
+            }
+
+            result.add(map);
+        }
+
+        return result;
     }
 
     @PatchMapping("/{orderId}/status")
     public Map<String, Object> updateOrderStatus(@PathVariable String orderId, @RequestBody Map<String, String> body) {
         String newStatus = body.get("status");
-        for (Map<String, Object> order : orderList) {
-            if (order.get("orderId").equals(orderId)) {
-                order.put("status", newStatus);
-                return order;
-            }
+        Optional<OrderEntity> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isPresent()) {
+            OrderEntity order = optionalOrder.get();
+            order.setStatus(newStatus);
+            orderRepository.save(order);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("orderId", order.getOrderId());
+            map.put("status", order.getStatus());
+            return map;
         }
         return Collections.singletonMap("error", "Order not found");
     }
 
     @DeleteMapping("/{orderId}")
     public Map<String, String> deleteOrder(@PathVariable String orderId) {
-        boolean removed = orderList.removeIf(order -> order.get("orderId").equals(orderId));
-        if (removed) {
+        if (orderRepository.existsById(orderId)) {
+            orderRepository.deleteById(orderId);
             return Collections.singletonMap("message", "Order deleted successfully");
         }
         return Collections.singletonMap("error", "Order not found");

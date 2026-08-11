@@ -2,14 +2,11 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy configuration and map the source code correctly
+# Copy configuration and source code
 COPY pom.xml .
 COPY api/src ./src
 
-# Execute the Maven package step AND repackage into an executable JAR
-RUN mvn clean package spring-boot:repackage -DskipTests
-
-# Execute the Maven package step
+# Build the executable Spring Boot JAR
 RUN mvn clean package -DskipTests
 
 # Step 2: Runtime stage (Using Java 21)
