@@ -10,3 +10,9 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
+# Copy project configuration and sources
+COPY pom.xml .
+COPY src ./src
+
+# Now execute the Maven package step
+RUN mvn clean package -DskipTests
